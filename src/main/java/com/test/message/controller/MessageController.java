@@ -12,7 +12,14 @@ import java.util.Date;
 @Controller
 public class MessageController {
 
-    @MessageMapping("/chat")
+    @MessageMapping("/command")
+    @SendTo("/topic/command")
+    public String command(String command) {
+        String time = new SimpleDateFormat("HH:mm").format(new Date());
+        return time + ": " + command;
+    }
+
+    @MessageMapping("/messages")
     @SendTo("/topic/messages")
     public OutputMessage message(Message message) {
         String time = new SimpleDateFormat("HH:mm").format(new Date());

@@ -6,11 +6,9 @@
     <script src="resources/js/stomp.js"></script>
 
     <script type="text/javascript">
-
-        var stompClient = null;
+        let stompClient = null;
 
         function setConnected(connected) {
-
             document.getElementById('connect').disabled = connected;
             document.getElementById('disconnect').disabled = !connected;
             document.getElementById('conversationDiv').style.visibility = connected ? 'visible' : 'hidden';
@@ -18,23 +16,25 @@
         }
 
         function connect() {
-
-            var socket = new SockJS('/chat');
+            const socket = new SockJS('/chat');
             stompClient = Stomp.over(socket);
 
             stompClient.connect({}, function(frame) {
 
                 setConnected(true);
                 console.log('Connected: ' + frame);
-                stompClient.subscribe('/topic/messages', function(messageOutput) {
 
+                stompClient.subscribe('/topic/command', function(messageOutput) {
+                    showMessageOutput(messageOutput.body);
+                });
+
+                stompClient.subscribe('/topic/messages', function(messageOutput) {
                     showMessageOutput(JSON.parse(messageOutput.body));
                 });
             });
         }
 
         function disconnect() {
-
             if(stompClient != null) {
                 stompClient.disconnect();
             }
@@ -44,18 +44,19 @@
         }
 
         function sendMessage() {
+            const from = document.getElementById('from').value;
+            const text = document.getElementById('text').value;
 
-            var from = document.getElementById('from').value;
-            var text = document.getElementById('text').value;
-            stompClient.send("/app/chat", {}, JSON.stringify({'from':from, 'text':text}));
+            stompClient.send("/app/command", {}, text);
+            stompClient.send("/app/messages", {}, JSON.stringify({'from':from, 'text':text}));
         }
 
         function showMessageOutput(messageOutput) {
-
-            var response = document.getElementById('response');
-            var p = document.createElement('p');
+            const response = document.getElementById('response');
+            const p = document.createElement('p');
             p.style.wordWrap = 'break-word';
-            p.appendChild(document.createTextNode(messageOutput.from + ": " + messageOutput.text + " (" + messageOutput.time + ")"));
+            // p.appendChild(document.createTextNode(messageOutput.from + ": " + messageOutput.text + " (" + messageOutput.time + ")"));
+            p.appendChild(document.createTextNode(JSON.stringify(messageOutput)));
             response.appendChild(p);
         }
 
@@ -66,8 +67,6 @@
 <body onload="disconnect()">
 
 <div>
-
-
     <div>
         <input type="text" id="from" placeholder="Choose a nickname"/>
     </div>
